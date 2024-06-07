@@ -12,17 +12,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name='Finder',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('email', models.EmailField(default=str, max_length=254)),
                 ('password', models.CharField(max_length=200)),
                 ('type_acot', models.CharField(max_length=1)),
-                ('status', models.BooleanField(default=True)),
-                ('ivr', models.IntegerField(default=0)),
-                ('months', models.TextField()),
-                ('date', models.TextField()),
-                ('cas', models.TextField()),
             ],
         ),
     ]

@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'accounts'
+    'accounts',
+    'finders',
+    'settings'
     
 ]
 
@@ -86,7 +88,7 @@ WSGI_APPLICATION = 'saru_api.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-
+        default='sqlite:///db.sqlite3'
     )
 }
 
