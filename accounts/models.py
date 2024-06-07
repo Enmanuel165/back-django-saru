@@ -22,7 +22,7 @@ class Account(models.Model):
     )
     ivr = models.CharField(max_length=20)
     months = models.TextField()
-    date = models.TextField()
+    consul = models.TextField()
     cas = models.TextField()
     
     def __str__(self) -> str:
