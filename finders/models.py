@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Finder(models.Model):
-    email = models.EmailField(default=str)
+    email = models.EmailField(default=str, unique=True)
     password = models.CharField(max_length=200)
     type_acot = models.CharField(
         max_length=1, 
