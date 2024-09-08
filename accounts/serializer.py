@@ -21,5 +21,8 @@ class AccountSerializer(serializers.ModelSerializer):
         elif reply == "INCORRECT PASSWORD": raise serializers.ValidationError("CONTRASEÑA INCORRECTA")
         elif reply == "NOT IVR": raise serializers.ValidationError("IVR NO ENCONTRADO")
         elif reply == "NOT READY": raise serializers.ValidationError("LA CUENTA NO ESTA LISTA")
-        elif reply == "READY": return super().validate(attrs)
+        elif reply == "NEED IVR": raise serializers.ValidationError("ESPECIFIQUE UN IVR")
+        elif reply['status'] == "READY":
+            attrs['type_acot'] = reply["type_acot"]
+            return super().validate(attrs)
         else: raise serializers.ValidationError("ERROR NO IDENTIFICADO")

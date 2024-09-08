@@ -1,5 +1,7 @@
 import requests
 from urllib.parse import quote
+from bs4 import BeautifulSoup
+
 
 class Verify:
     def __init__(self, ivr):
@@ -18,12 +20,21 @@ class Verify:
         if 'Correo electrónico o contraseña inválida' in login_page.text: return {'status': 'INCORRECT PASSWORD'}
         headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': login_page.url }
         account = self.client.get(url='https://ais.usvisa-info.com/es-mx/niv/account', headers=headers)
+        soup = BeautifulSoup(account.text, 'lxml')
+        if len(soup.find_all('div', class_='application')) > 1 and self.ivr == "0": return {'status': 'NEED IVR'}
         if self.ivr == "0":
-            if "Programe la cita" in self.capture(account.text, "<h4 class='status'>","</h4>"): url_continue =  self.capture(account.text, 'class="button primary small" href="', '"')
+            code = soup.find('div', class_="alert application card ready_to_schedule")
+            if code != None: url_continue = code.find('a', string="Continuar" )['href']
             else: return {'status': 'NOT READY'}
         else:
             url_continue = self.find_ivr(account.text, self.ivr)
-            if url_continue == None: return {'status': 'NOT IVR'}
+            if url_continue == None: return {'status': 'NOT READY'}
+            elif url_continue == "NOT IVR": return {'status': 'NOT IVR'}
+        if len(soup.find_all('td', class_='show-for-medium')) / 2 == 1:
+            return "P"
+        else:
+            return "F"
+        
     
     def capture(self, data: str, start, end):
         try:
@@ -36,18 +47,14 @@ class Verify:
     
     def find_ivr(self, data: str, ivr):
         accounts = []
-        while True:
-            try:
-                star = data.index("class='alert application card ready_to_schedule'>") + len("class='alert application card ready_to_schedule'>")
-                last = data.index("</strong>\n</div>", star)
-                if star == last : break
-                accounts.append(data[star:last])
-                data = data[:star] + data[last:]
-            except ValueError:
-                break
+        soup = BeautifulSoup(data, 'lxml')
+        if soup.find('strong', string=ivr) == None: return "NOT IVR"
+        accounts = soup.find_all('div', class_="alert application card ready_to_schedule")
+        print(accounts)
         for acot in accounts:
-            if ivr in acot:
-                return self.capture(acot, 'class="button primary small" href="', '"')
+            if acot.find('strong', string=ivr):
+                print(acot.find('a', string="Continuar" )['href'])
+                return acot.find('a', string="Continuar" )['href']
         return None
 
 def VerifyAccount(attrs):
@@ -61,8 +68,9 @@ def VerifyAccount(attrs):
     if resp == {'status': 'ERROR CSRF'}: return "ERROR CSRF"
     elif resp == {'status': 'INCORRECT PASSWORD'}: return "INCORRECT PASSWORD"
     elif resp == {'status': 'NOT IVR'}: return "NOT IVR"
+    elif resp == {'status': 'NEED IVR'}: return "NEED IVR"
     elif resp == {'status': 'NOT READY'}: return "NOT READY"
-    return "READY"
+    return {"status": "READY", "type_acot": resp}
  
    
     
