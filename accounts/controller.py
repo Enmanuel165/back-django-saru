@@ -24,13 +24,12 @@ class Verify:
         if len(soup.find_all('div', class_='application')) > 1 and self.ivr == "0": return {'status': 'NEED IVR'}
         if self.ivr == "0":
             code = soup.find('div', class_="alert application card ready_to_schedule")
-            if code != None: url_continue = code.find('a', string="Continuar" )['href']
-            else: return {'status': 'NOT READY'}
+            if code == None: return {'status': 'NOT READY'}
         else:
-            url_continue = self.find_ivr(account.text, self.ivr)
-            if url_continue == None: return {'status': 'NOT READY'}
-            elif url_continue == "NOT IVR": return {'status': 'NOT IVR'}
-        if len(soup.find_all('td', class_='show-for-medium')) / 2 == 1:
+            acot = self.find_ivr(account.text, self.ivr)
+            if acot == None: return {'status': 'NOT READY'}
+            elif acot == "NOT IVR": return {'status': 'NOT IVR'}
+        if len(acot.find('tbody').find_all('tr')) <= 1:
             return "P"
         else:
             return "F"
@@ -53,8 +52,7 @@ class Verify:
         print(accounts)
         for acot in accounts:
             if acot.find('strong', string=ivr):
-                print(acot.find('a', string="Continuar" )['href'])
-                return acot.find('a', string="Continuar" )['href']
+                return acot
         return None
 
 def VerifyAccount(attrs):
