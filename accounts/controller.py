@@ -8,31 +8,34 @@ class Verify:
         self.ivr = ivr
         
     def test(self, user_name, pass_word) -> dict:
-        client = requests.Session()
-        self.client = client
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36','Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7','Referer': 'https://ais.usvisa-info.com/es-mx/niv'}
-        page_home = self.client.get(url='https://ais.usvisa-info.com/es-mx/niv/users/sign_in', headers=headers)
-        csrf = self.capture(page_home.text, 'name="csrf-token" content="', '"')
-        if csrf == None: return {'status': 'ERROR CSRF'}
-        headers = { 'X-CSRF-Token': csrf, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': '*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript', 'X-Requested-With': 'XMLHttpRequest', 'Origin': 'https://ais.usvisa-info.com', 'Referer': 'https://ais.usvisa-info.com/es-mx/niv/users/sign_in' }
-        postdata = f'user%5Bemail%5D={quote(user_name)}&user%5Bpassword%5D={pass_word}&policy_confirmed=1&commit=Iniciar+sesi%C3%B3n'
-        login_page = self.client.post(url='https://ais.usvisa-info.com/es-mx/niv/users/sign_in', data=postdata, headers=headers)
-        if 'Correo electrónico o contraseña inválida' in login_page.text: return {'status': 'INCORRECT PASSWORD'}
-        headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': login_page.url }
-        account = self.client.get(url='https://ais.usvisa-info.com/es-mx/niv/account', headers=headers)
-        soup = BeautifulSoup(account.text, 'lxml')
-        if len(soup.find_all('div', class_='application')) > 1 and self.ivr == "0": return {'status': 'NEED IVR'}
-        if self.ivr == "0":
-            code = soup.find('div', class_="alert application card ready_to_schedule")
-            if code == None: return {'status': 'NOT READY'}
-        else:
-            acot = self.find_ivr(account.text, self.ivr)
-            if acot == None: return {'status': 'NOT READY'}
-            elif acot == "NOT IVR": return {'status': 'NOT IVR'}
-        if len(acot.find('tbody').find_all('tr')) <= 1:
-            return "P"
-        else:
-            return "F"
+        try:
+            client = requests.Session()
+            self.client = client
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36','Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7','Referer': 'https://ais.usvisa-info.com/es-mx/niv'}
+            page_home = self.client.get(url='https://ais.usvisa-info.com/es-mx/niv/users/sign_in', headers=headers)
+            csrf = self.capture(page_home.text, 'name="csrf-token" content="', '"')
+            if csrf == None: return {'status': 'ERROR CSRF'}
+            headers = { 'X-CSRF-Token': csrf, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': '*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript', 'X-Requested-With': 'XMLHttpRequest', 'Origin': 'https://ais.usvisa-info.com', 'Referer': 'https://ais.usvisa-info.com/es-mx/niv/users/sign_in' }
+            postdata = f'user%5Bemail%5D={quote(user_name)}&user%5Bpassword%5D={pass_word}&policy_confirmed=1&commit=Iniciar+sesi%C3%B3n'
+            login_page = self.client.post(url='https://ais.usvisa-info.com/es-mx/niv/users/sign_in', data=postdata, headers=headers)
+            if 'Correo electrónico o contraseña inválida' in login_page.text: return {'status': 'INCORRECT PASSWORD'}
+            headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': login_page.url }
+            account = self.client.get(url='https://ais.usvisa-info.com/es-mx/niv/account', headers=headers)
+            soup = BeautifulSoup(account.text, 'lxml')
+            if len(soup.find_all('div', class_='application')) > 1 and self.ivr == "0": return {'status': 'NEED IVR'}
+            if self.ivr == "0":
+                acot = soup.find('div', class_="alert application card ready_to_schedule")
+                if acot == None: return {'status': 'NOT READY'}
+            else:
+                acot = self.find_ivr(account.text, self.ivr)
+                if acot == None: return {'status': 'NOT READY'}
+                elif acot == "NOT IVR": return {'status': 'NOT IVR'}
+            if len(acot.find('tbody').find_all('tr')) <= 1:
+                return "P"
+            else:
+                return "F"
+        except Exception as e:
+            print(e)
         
     
     def capture(self, data: str, start, end):
